@@ -7,18 +7,16 @@ import ItemFormPage from './pages/ItemFormPage';
 import StockInPage from './pages/StockInPage';
 import StockOutPage from './pages/StockOutPage';
 import StockBalancePage from './pages/StockBalancePage';
+import LowStockPage from './pages/LowStockPage';
 import CategoryPage from './pages/CategoryPage';
 import SupplierPage from './pages/SupplierPage';
-import LoginPage from './pages/LoginPage';  // ← MAKE SURE THIS IS IMPORTED
+import LoginPage from './pages/LoginPage';
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Login route - OUTSIDE the Layout */}
         <Route path="/login" element={<LoginPage />} />
-        
-        {/* All protected routes - INSIDE the Layout */}
         <Route path="/" element={<Layout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
@@ -28,6 +26,7 @@ function App() {
           <Route path="stock/in" element={<StockInPage />} />
           <Route path="stock/out" element={<StockOutPage />} />
           <Route path="reports/stock-balance" element={<StockBalancePage />} />
+          <Route path="reports/low-stock" element={<LowStockPage />} />
           <Route path="categories" element={<CategoryPage />} />
           <Route path="suppliers" element={<SupplierPage />} />
         </Route>
