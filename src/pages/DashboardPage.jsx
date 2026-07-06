@@ -50,7 +50,7 @@ const DashboardPage = () => {
       });
       setLowStockList(lowStock?.data || []);
 
-      // ===== FIXED CHART DATA PROCESSING =====
+      // Process chart data
       const now = new Date();
       const last7Days = [];
       for (let i = 6; i >= 0; i--) {
@@ -63,12 +63,10 @@ const DashboardPage = () => {
       const stockInData = allStockIns?.data || [];
       const stockOutData = allStockOuts?.data || [];
 
-      // Group by exact date
       const inByDate = {};
       const outByDate = {};
       
       stockInData.forEach(item => {
-        // Ensure we have a valid date string
         let dateKey = null;
         if (item.stockInDate) {
           const d = new Date(item.stockInDate);
@@ -94,22 +92,21 @@ const DashboardPage = () => {
         }
       });
 
-      // Build chart data for the last 7 days (fill missing with 0)
-      const chartData = last7Days.map(({ date, day }) => {
-        const inQty = inByDate[date] || 0;
-        const outQty = outByDate[date] || 0;
-        return { day, inQty, outQty, net: inQty - outQty };
-      });
+      const chartData = last7Days.map(({ date, day }) => ({
+        day,
+        inQty: inByDate[date] || 0,
+        outQty: outByDate[date] || 0,
+        net: (inByDate[date] || 0) - (outByDate[date] || 0)
+      }));
 
       setChartData(chartData);
 
-      // Compute summary totals for the 7-day period
       const totalIn = chartData.reduce((sum, d) => sum + d.inQty, 0);
       const totalOut = chartData.reduce((sum, d) => sum + d.outQty, 0);
       const net = totalIn - totalOut;
       setSummary({ totalIn, totalOut, net });
 
-      // ===== Recent Activities =====
+      // Recent activities
       const activities = [];
       if (allStockIns?.data) {
         allStockIns.data.slice(0, 3).forEach(item => {
@@ -146,19 +143,13 @@ const DashboardPage = () => {
     navigate(path);
   };
 
-  // Find max value for scaling bars
-  const maxVal = Math.max(
-    ...chartData.map(d => Math.max(d.inQty, d.outQty)),
-    1
-  );
-
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-100">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Welcome Back 🥰</h1>
+            <h1 className="text-3xl font-bold text-gray-800">Welcome Back 🎉</h1>
             <p className="text-gray-500 mt-2 text-lg">Manage your grocery inventory efficiently with real-time stock tracking and supplier management.</p>
           </div>
           <div className="hidden md:block">
@@ -171,10 +162,10 @@ const DashboardPage = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <button 
           onClick={() => handleNavigate('/items/add')}
-          className="bg-white border border-gray-200 rounded-xl p-5 text-center hover:shadow-md transition-shadow hover:border-blue-400"
+          className="bg-white border border-gray-200 rounded-xl p-5 text-center hover:shadow-md transition-shadow hover:border-green-400"
         >
-          <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center mx-auto">
-            <Plus className="w-7 h-7 text-blue-500" />
+          <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center mx-auto">
+            <Plus className="w-7 h-7 text-green-500" />
           </div>
           <span className="text-sm font-medium text-gray-700 mt-2 block">Add Item</span>
         </button>
@@ -242,77 +233,97 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      {/* ===== STOCK OVERVIEW CHART (FIXED) ===== */}
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg p-6 border border-blue-100">
-        {/* Summary row */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 text-center shadow-sm">
-            <p className="text-xs text-gray-500">📥 Stock In (7d)</p>
-            <p className="text-xl font-bold text-green-600">{summary.totalIn}</p>
+      {/* ===== CREATIVE STOCK OVERVIEW CHART – SINGLE COLOUR ===== */}
+      <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-green-600" />
+              Stock Overview
+            </h3>
+            <p className="text-xs text-gray-400">Last 7 days • Total stock movement</p>
           </div>
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 text-center shadow-sm">
-            <p className="text-xs text-gray-500">📤 Stock Out (7d)</p>
-            <p className="text-xl font-bold text-red-500">{summary.totalOut}</p>
+          <div className="flex items-center gap-4 text-xs">
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded-full bg-green-500"></span>
+              Stock In
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded-full bg-red-400"></span>
+              Stock Out
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded-full bg-gray-300"></span>
+              Net Balance
+            </span>
           </div>
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 text-center shadow-sm">
-            <p className="text-xs text-gray-500">📊 Net Change</p>
-            <p className={`text-xl font-bold ${summary.net >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+        </div>
+
+        {/* Summary Row */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-3 text-center border border-green-200">
+            <p className="text-xs text-green-600 font-medium">📥 Stock In</p>
+            <p className="text-xl font-bold text-green-700">{summary.totalIn}</p>
+          </div>
+          <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-xl p-3 text-center border border-red-200">
+            <p className="text-xs text-red-600 font-medium">📤 Stock Out</p>
+            <p className="text-xl font-bold text-red-600">{summary.totalOut}</p>
+          </div>
+          <div className={`bg-gradient-to-r ${summary.net >= 0 ? 'from-green-50 to-green-100 border-green-200' : 'from-red-50 to-red-100 border-red-200'} rounded-xl p-3 text-center border`}>
+            <p className="text-xs font-medium text-gray-600">📊 Net Change</p>
+            <p className={`text-xl font-bold ${summary.net >= 0 ? 'text-green-700' : 'text-red-600'}`}>
               {summary.net >= 0 ? '+' : ''}{summary.net}
             </p>
           </div>
         </div>
 
-        {/* Chart */}
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-blue-600" />
-            Stock Overview (Last 7 Days)
-          </h3>
-          <span className={`text-xs px-3 py-1 rounded-full shadow-sm ${summary.net >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-            {summary.net >= 0 ? '📈 Growing' : '📉 Declining'}
-          </span>
-        </div>
+        {/* Creative Chart – Single Colour Green Gradient */}
+        <div className="relative">
+          <div className="h-64 flex items-end justify-between gap-2">
+            {chartData.map((day, i) => {
+              const maxVal = Math.max(
+                ...chartData.map(d => Math.max(d.inQty, d.outQty)),
+                1
+              );
+              const inHeight = maxVal > 0 ? (day.inQty / maxVal) * 100 : 0;
+              const outHeight = maxVal > 0 ? (day.outQty / maxVal) * 100 : 0;
+              const isPositive = day.net >= 0;
 
-        <div className="h-64 flex items-end justify-between gap-2 relative">
-          {chartData.map((day, i) => {
-            const inHeight = maxVal > 0 ? Math.max((day.inQty / maxVal) * 100, 0) : 0;
-            const outHeight = maxVal > 0 ? Math.max((day.outQty / maxVal) * 100, 0) : 0;
-            return (
-              <div key={i} className="flex-1 flex flex-col items-center group">
-                <div className="relative w-full flex flex-col items-center">
-                  {/* Bar group */}
-                  <div className="flex items-end justify-center gap-1 w-full" style={{ height: '90%' }}>
-                    {/* Stock In bar (green) */}
-                    <div 
-                      className="bg-gradient-to-t from-green-400 to-green-500 rounded-t-md transition-all duration-300 group-hover:scale-y-105 origin-bottom w-1/2 shadow-sm"
-                      style={{ height: `${Math.max(inHeight, 4)}%`, minHeight: '8px' }}
-                      title={`In: ${day.inQty}`}
-                    />
-                    {/* Stock Out bar (red) */}
-                    <div 
-                      className="bg-gradient-to-t from-red-400 to-red-500 rounded-t-md transition-all duration-300 group-hover:scale-y-105 origin-bottom w-1/2 shadow-sm"
-                      style={{ height: `${Math.max(outHeight, 4)}%`, minHeight: '8px' }}
-                      title={`Out: ${day.outQty}`}
-                    />
+              return (
+                <div key={i} className="flex-1 flex flex-col items-center group">
+                  <div className="relative w-full flex flex-col items-center" style={{ height: '90%' }}>
+                    <div className="flex items-end justify-center gap-1 w-full h-full">
+                      <div 
+                        className="w-1/3 bg-gradient-to-t from-green-400 via-green-500 to-green-600 rounded-t-lg transition-all duration-300 group-hover:scale-y-105 origin-bottom shadow-md"
+                        style={{ height: `${Math.max(inHeight, 4)}%`, minHeight: '8px' }}
+                      />
+                      <div 
+                        className="w-1/3 bg-gradient-to-t from-red-300 via-red-400 to-red-500 rounded-t-lg transition-all duration-300 group-hover:scale-y-105 origin-bottom shadow-md"
+                        style={{ height: `${Math.max(outHeight, 4)}%`, minHeight: '8px' }}
+                      />
+                      <div 
+                        className={`absolute -top-2 w-3 h-3 rounded-full transition-all duration-300 ${
+                          isPositive ? 'bg-green-500 shadow-lg shadow-green-200' : 'bg-gray-400 shadow-lg shadow-gray-200'
+                        } ${day.net !== 0 ? 'opacity-100' : 'opacity-30'}`}
+                      />
+                    </div>
                   </div>
-                  {/* Net indicator (dot) */}
-                  <div 
-                    className={`w-2 h-2 rounded-full mt-1 ${day.net >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
-                    style={{ opacity: day.net !== 0 ? 1 : 0.3 }}
-                  />
+                  <span className="text-xs font-medium text-gray-500 mt-3">{day.day}</span>
                 </div>
-                <span className="text-xs font-medium text-gray-600 mt-2">{day.day}</span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+          <div className="absolute bottom-8 left-0 right-0 border-t-2 border-dotted border-gray-200 opacity-50"></div>
         </div>
 
-        {/* Legend */}
-        <div className="flex justify-center gap-6 mt-3 text-xs text-gray-600">
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-400"></span> Stock In</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-red-400"></span> Stock Out</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500"></span> Net +</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500"></span> Net -</span>
+        {/* Footer Stats */}
+        <div className="mt-4 flex justify-center gap-6 text-xs text-gray-400">
+          <span>📈 Total In: <span className="font-bold text-green-600">{summary.totalIn}</span></span>
+          <span>📉 Total Out: <span className="font-bold text-red-500">{summary.totalOut}</span></span>
+          <span>⚖️ Balance: <span className={`font-bold ${summary.net >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+            {summary.net >= 0 ? '+' : ''}{summary.net}
+          </span></span>
         </div>
       </div>
 
