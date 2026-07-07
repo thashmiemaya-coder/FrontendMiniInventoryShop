@@ -52,14 +52,22 @@ const ItemListPage = () => {
     setCurrentPage(1);
   };
 
+  // ===== UPDATED DELETE HANDLER WITH SUCCESS POPUP =====
   const handleDelete = async () => {
     try {
+      const itemName = selectedItem?.itemName || 'Item';
       await itemService.deleteItem(selectedItem?.itemId);
+      // Refresh the list
       fetchItems();
+      // Show success popup with the item name
+      alert(`✅ "${itemName}" deleted successfully!`);
+      // Close modal and clear selection
       setShowDeleteModal(false);
       setSelectedItem(null);
     } catch (error) {
       console.error('Error deleting item:', error);
+      alert('❌ Failed to delete item. Please try again.');
+      setShowDeleteModal(false);
     }
   };
 
@@ -172,6 +180,7 @@ const ItemListPage = () => {
         onPageChange={setCurrentPage}
       />
 
+      {/* Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}

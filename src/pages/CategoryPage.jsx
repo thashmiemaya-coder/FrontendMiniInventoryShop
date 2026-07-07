@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search } from 'lucide-react';
 import { categoryService } from '../services/categoryService';
+import { itemService } from '../services/itemService';
 import StatusBadge from '../components/common/StatusBadge';
 import ConfirmModal from '../components/common/ConfirmModal';
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -15,6 +16,7 @@ const CategoryPage = () => {
   const [editingCategory, setEditingCategory] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [errorModal, setErrorModal] = useState({ open: false, message: '' });
   const [formData, setFormData] = useState({
     categoryName: '',
     description: '',
@@ -81,14 +83,34 @@ const CategoryPage = () => {
     }
   };
 
+  // ===== UPDATED DELETE HANDLER =====
   const handleDelete = async () => {
     try {
+      // Attempt to delete the category
       await categoryService.deleteCategory(selectedCategory?.categoryId);
+      // If successful, refresh list and close modals
       fetchCategories();
       setShowDeleteModal(false);
       setSelectedCategory(null);
+      // Optional success alert (can use toast later)
+      alert('Category deleted successfully.');
     } catch (error) {
-      console.error('Error deleting category:', error);
+      // Check if error message indicates foreign key constraint
+      const errorMsg = error?.message || error?.errors?.[0] || '';
+      if (errorMsg.includes('foreign key') || errorMsg.includes('associated items') || errorMsg.includes('constraint')) {
+        setErrorModal({
+          open: true,
+          message: `Cannot delete category "${selectedCategory?.categoryName}" because it has associated items. Please remove or reassign those items first.`
+        });
+      } else {
+        // Generic error
+        setErrorModal({
+          open: true,
+          message: `Failed to delete category: ${errorMsg || 'Unknown error'}`
+        });
+      }
+      // Keep delete modal open or close? We'll close it and show error modal.
+      setShowDeleteModal(false);
     }
   };
 
@@ -251,6 +273,7 @@ const CategoryPage = () => {
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
@@ -258,6 +281,31 @@ const CategoryPage = () => {
         title="Delete Category"
         message={`Are you sure you want to delete "${selectedCategory?.categoryName}"? This action cannot be undone.`}
       />
+
+      {/* Error Modal – shows when category has items */}
+      {errorModal.open && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-red-100 rounded-full">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-red-600">Cannot Delete Category</h3>
+                <p className="text-gray-600 mt-2 text-sm">{errorModal.message}</p>
+              </div>
+            </div>
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setErrorModal({ open: false, message: '' })}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -84,14 +84,22 @@ const SupplierPage = () => {
     }
   };
 
+  // ===== UPDATED DELETE HANDLER WITH SUCCESS POPUP =====
   const handleDelete = async () => {
     try {
+      const supplierName = selectedSupplier?.supplierName || 'Supplier';
       await supplierService.deleteSupplier(selectedSupplier?.supplierId);
+      // Refresh the list
       fetchSuppliers();
+      // Show success popup with the supplier name
+      alert(`✅ "${supplierName}" deleted successfully!`);
+      // Close modal and clear selection
       setShowDeleteModal(false);
       setSelectedSupplier(null);
     } catch (error) {
       console.error('Error deleting supplier:', error);
+      alert('❌ Failed to delete supplier. Please try again.');
+      setShowDeleteModal(false);
     }
   };
 
@@ -280,6 +288,7 @@ const SupplierPage = () => {
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -15,35 +15,49 @@ import {
 
 const Sidebar = () => {
   const navigate = useNavigate();
+  const [userRole, setUserRole] = useState('Cashier');
+
+  useEffect(() => {
+    const role = localStorage.getItem('userRole') || 'Cashier';
+    setUserRole(role);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userEmail');
     navigate('/login');
   };
 
   const menuItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/items', icon: Package, label: 'Item List' },
-    { path: '/stock/in', icon: ShoppingCart, label: 'Stock In' },
-    { path: '/stock/out', icon: Truck, label: 'Stock Out' },
-    { path: '/reports/stock-balance', icon: FileText, label: 'Stock Balance' },
-    { path: '/categories', icon: Tags, label: 'Categories' },
-    { path: '/suppliers', icon: Users, label: 'Suppliers' },
-    { path: '/reports/low-stock', icon: AlertTriangle, label: 'Low Stock' },
-    { path: '/api-docs', icon: BookOpen, label: 'API Docs' },
+    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['Admin', 'Manager', 'Clerk', 'Cashier'] },
+    { path: '/items', icon: Package, label: 'Items', roles: ['Admin', 'Manager', 'Clerk'] },
+    { path: '/stock/in', icon: ShoppingCart, label: 'Stock In', roles: ['Admin', 'Manager', 'Clerk'] },
+    { path: '/stock/out', icon: Truck, label: 'Stock Out', roles: ['Admin', 'Manager', 'Clerk'] },
+    { path: '/reports/stock-balance', icon: FileText, label: 'Stock Balance', roles: ['Admin', 'Manager', 'Clerk', 'Cashier'] },
+    { path: '/categories', icon: Tags, label: 'Categories', roles: ['Admin', 'Manager'] },
+    { path: '/suppliers', icon: Users, label: 'Suppliers', roles: ['Admin', 'Manager'] },
+    { path: '/reports/low-stock', icon: AlertTriangle, label: 'Low Stock', roles: ['Admin', 'Manager', 'Clerk'] },
+   
   ];
+
+  const filteredItems = menuItems.filter(item => 
+    item.roles.includes(userRole)
+  );
 
   return (
     <aside className="w-64 bg-green-700 text-white flex flex-col">
-      {/* Logo */}
       <div className="p-4 border-b border-green-600">
         <h1 className="text-xl font-bold">🍏 Grocery</h1>
         <p className="text-sm text-green-200">Inventory System</p>
+        <div className="mt-1 text-xs text-green-300 bg-green-800/50 px-2 py-0.5 rounded inline-block">
+          {userRole}
+        </div>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-4">
-        {menuItems.map((item) => (
+        {filteredItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
@@ -61,7 +75,6 @@ const Sidebar = () => {
         ))}
       </nav>
 
-      {/* Logout */}
       <div className="p-4 border-t border-green-600">
         <button
           onClick={handleLogout}
