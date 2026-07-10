@@ -36,8 +36,9 @@ const Sidebar = () => {
    
   ];
 
-  const filteredItems = menuItems.filter(item => 
-    item.roles.includes(userRole)
+  const normalizedRole = userRole.trim().toLowerCase();
+  const filteredItems = menuItems.filter(item =>
+    item.roles.some((role) => role.toLowerCase() === normalizedRole)
   );
 
   return (
