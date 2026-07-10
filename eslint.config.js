@@ -17,5 +17,10 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    rules: {
+      // This app fetches data on mount via plain async helpers (no data-fetching
+      // library/Suspense in use), which this rule flags unconditionally.
+      'react-hooks/set-state-in-effect': 'off',
+    },
   },
 ])

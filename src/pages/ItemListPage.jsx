@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { itemService } from '../services/itemService';
@@ -10,7 +10,6 @@ import EmptyState from '../components/common/EmptyState';
 
 const ItemListPage = () => {
   const [items, setItems] = useState([]);
-  const [filteredItems, setFilteredItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -18,19 +17,10 @@ const ItemListPage = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  useEffect(() => {
-    fetchItems();
-  }, []);
-
-  useEffect(() => {
-    filterItems();
-  }, [searchTerm, items]);
-
   const fetchItems = async () => {
     try {
       const response = await itemService.getAllItems();
       setItems(response?.data || []);
-      setFilteredItems(response?.data || []);
     } catch (error) {
       console.error('Error fetching items:', error);
     } finally {
@@ -38,19 +28,18 @@ const ItemListPage = () => {
     }
   };
 
-  const filterItems = () => {
-    if (!searchTerm) {
-      setFilteredItems(items);
-      return;
-    }
-    const filtered = items.filter((item) =>
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  const filteredItems = useMemo(() => {
+    if (!searchTerm) return items;
+    return items.filter((item) =>
       item.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.itemCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.barcode?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    setFilteredItems(filtered);
-    setCurrentPage(1);
-  };
+  }, [items, searchTerm]);
 
   // ===== UPDATED DELETE HANDLER WITH SUCCESS POPUP =====
   const handleDelete = async () => {
@@ -106,7 +95,10 @@ const ItemListPage = () => {
             type="text"
             placeholder="Search by Item Code, Barcode or Name..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
             className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 w-full"
           />
         </div>

@@ -1,5 +1,3 @@
-import React from 'react';
-
 const StatusBadge = ({ status }) => {
   const statusConfig = {
     'Active': { color: 'bg-green-100 text-green-800' },

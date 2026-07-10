@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Search, FileDown, Printer } from 'lucide-react';
 import { stockService } from '../services/stockService';
 import { categoryService } from '../services/categoryService';
@@ -12,7 +12,6 @@ import autoTable from 'jspdf-autotable';
 
 const StockBalancePage = () => {
   const [stockData, setStockData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -21,15 +20,6 @@ const StockBalancePage = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(8);
-
-  useEffect(() => {
-    fetchFilters();
-    fetchStockBalance();
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [searchTerm, selectedCategory, selectedSupplier, stockData]);
 
   const fetchFilters = async () => {
     try {
@@ -49,7 +39,6 @@ const StockBalancePage = () => {
       setLoading(true);
       const response = await stockService.getStockBalance();
       setStockData(response?.data || []);
-      setFilteredData(response?.data || []);
     } catch (error) {
       console.error('Error fetching stock balance:', error);
     } finally {
@@ -57,7 +46,12 @@ const StockBalancePage = () => {
     }
   };
 
-  const applyFilters = () => {
+  useEffect(() => {
+    fetchFilters();
+    fetchStockBalance();
+  }, []);
+
+  const filteredData = useMemo(() => {
     let data = [...stockData];
 
     if (searchTerm) {
@@ -75,9 +69,8 @@ const StockBalancePage = () => {
       data = data.filter(item => item.supplierId === parseInt(selectedSupplier));
     }
 
-    setFilteredData(data);
-    setCurrentPage(1);
-  };
+    return data;
+  }, [stockData, searchTerm, selectedCategory, selectedSupplier]);
 
   const totals = filteredData.reduce(
     (acc, item) => {
@@ -229,14 +222,20 @@ const StockBalancePage = () => {
             type="text"
             placeholder="Search by Item Code or Name..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
             className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
           />
         </div>
 
         <select
           value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
+          onChange={(e) => {
+            setSelectedCategory(e.target.value);
+            setCurrentPage(1);
+          }}
           className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">All Categories</option>
@@ -249,7 +248,10 @@ const StockBalancePage = () => {
 
         <select
           value={selectedSupplier}
-          onChange={(e) => setSelectedSupplier(e.target.value)}
+          onChange={(e) => {
+            setSelectedSupplier(e.target.value);
+            setCurrentPage(1);
+          }}
           className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">All Suppliers</option>
@@ -265,6 +267,7 @@ const StockBalancePage = () => {
             setSearchTerm('');
             setSelectedCategory('');
             setSelectedSupplier('');
+            setCurrentPage(1);
           }}
           className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         >

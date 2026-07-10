@@ -1,26 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  Truck, 
-  FileText, 
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Truck,
+  FileText,
   Tags,
   Users,
   AlertTriangle,
-  LogOut,
-  BookOpen
+  LogOut
 } from 'lucide-react';
 
 const Sidebar = () => {
   const navigate = useNavigate();
-  const [userRole, setUserRole] = useState('Cashier');
-
-  useEffect(() => {
-    const role = localStorage.getItem('userRole') || 'Cashier';
-    setUserRole(role);
-  }, []);
+  const [userRole] = useState(() => localStorage.getItem('userRole') || 'Cashier');
 
   const handleLogout = () => {
     localStorage.removeItem('token');

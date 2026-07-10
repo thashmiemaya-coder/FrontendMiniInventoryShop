@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBasket, Mail, Lock, Eye, EyeOff, Check, ArrowRight } from 'lucide-react';
 import { userService } from '../services/userService';
@@ -32,7 +32,7 @@ const LoginPage = () => {
       } else {
         setError(response.message || 'Invalid credentials. Please try again.');
       }
-    } catch (err) {
+    } catch {
       setError('Login failed. Please try again.');
     } finally {
       setIsLoading(false);

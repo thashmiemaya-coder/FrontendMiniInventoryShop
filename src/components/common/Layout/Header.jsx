@@ -1,22 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Bell, User, LogOut } from 'lucide-react';
+import { Search, Bell, LogOut } from 'lucide-react';
 import { stockService } from '../../../services/stockService';
 
 const Header = () => {
   const navigate = useNavigate();
   const [lowStockCount, setLowStockCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [userName, setUserName] = useState('');
-  const [userRole, setUserRole] = useState('');
-
-  useEffect(() => {
-    fetchLowStockCount();
-    const name = localStorage.getItem('userName') || 'User';
-    const role = localStorage.getItem('userRole') || 'Guest';
-    setUserName(name);
-    setUserRole(role);
-  }, []);
+  const [userName] = useState(() => localStorage.getItem('userName') || 'User');
+  const [userRole] = useState(() => localStorage.getItem('userRole') || 'Guest');
 
   const fetchLowStockCount = async () => {
     try {
@@ -30,6 +22,10 @@ const Header = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchLowStockCount();
+  }, []);
 
   const handleNotificationClick = () => {
     navigate('/reports/low-stock');

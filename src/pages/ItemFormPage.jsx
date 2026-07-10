@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { itemService } from '../services/itemService';
 import { categoryService } from '../services/categoryService';
@@ -22,13 +22,6 @@ const ItemFormPage = () => {
     reorderLevel: '',
     isActive: true,
   });
-
-  useEffect(() => {
-    fetchDropdownData();
-    if (id) {
-      fetchItemData();
-    }
-  }, [id]);
 
   const fetchDropdownData = async () => {
     try {
@@ -67,6 +60,13 @@ const ItemFormPage = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchDropdownData();
+    if (id) {
+      fetchItemData();
+    }
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle, Package, FileDown, Printer, ShoppingCart } from 'lucide-react';
 import { stockService } from '../services/stockService';
-import { itemService } from '../services/itemService';
 import { supplierService } from '../services/supplierService';
 import StatusBadge from '../components/common/StatusBadge';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import EmptyState from '../components/common/EmptyState';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -15,11 +13,6 @@ const LowStockPage = () => {
   const [lowStockItems, setLowStockItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [suppliers, setSuppliers] = useState([]);
-
-  useEffect(() => {
-    fetchLowStockItems();
-    fetchSuppliers();
-  }, []);
 
   const fetchSuppliers = async () => {
     try {
@@ -49,6 +42,11 @@ const LowStockPage = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchLowStockItems();
+    fetchSuppliers();
+  }, []);
 
   // ===== PDF EXPORT =====
   const handleExportPDF = () => {

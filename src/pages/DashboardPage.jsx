@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Package, ShoppingCart, Truck, AlertTriangle, 
-  TrendingUp, TrendingDown, Tag,
-  Plus, FileText, Box, ArrowRight, 
-  BarChart3, Clock, Users, Store
+import {
+  ShoppingCart, Truck,
+  TrendingUp, TrendingDown,
+  Plus, FileText, ArrowRight,
+  BarChart3, Store
 } from 'lucide-react';
 import { itemService } from '../services/itemService';
 import { categoryService } from '../services/categoryService';
@@ -26,13 +26,9 @@ const DashboardPage = () => {
   const [summary, setSummary] = useState({ totalIn: 0, totalOut: 0, net: 0 });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
   const fetchDashboardData = async () => {
     try {
-      const [items, categories, suppliers, lowStock, stockBalance, allStockIns, allStockOuts] = await Promise.all([
+      const [items, categories, suppliers, lowStock, , allStockIns, allStockOuts] = await Promise.all([
         itemService.getAllItems(),
         categoryService.getAllCategories(),
         supplierService.getAllSuppliers(),
@@ -136,6 +132,10 @@ const DashboardPage = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
   if (loading) return <LoadingSpinner />;
 

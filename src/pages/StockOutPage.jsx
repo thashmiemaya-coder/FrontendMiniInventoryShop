@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, Trash2, EyeOff, CheckCircle } from 'lucide-react';
 import { stockService } from '../services/stockService';
 import { itemService } from '../services/itemService';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const StockOutPage = () => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [items, setItems] = useState([]);
   const [stockItems, setStockItems] = useState([]);
   const [stockOutRecords, setStockOutRecords] = useState([]);
-  const [filteredRecords, setFilteredRecords] = useState([]);
   const [tableSearch, setTableSearch] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [formData, setFormData] = useState({
@@ -29,24 +26,6 @@ const StockOutPage = () => {
     }
   }, [successMessage]);
 
-  // ===== FETCH DATA =====
-  useEffect(() => {
-    fetchItems();
-    fetchStockOutRecords();
-  }, []);
-
-  useEffect(() => {
-    if (!tableSearch) {
-      setFilteredRecords(stockOutRecords);
-    } else {
-      const filtered = stockOutRecords.filter(record =>
-        record.itemName?.toLowerCase().includes(tableSearch.toLowerCase()) ||
-        record.reason?.toLowerCase().includes(tableSearch.toLowerCase())
-      );
-      setFilteredRecords(filtered);
-    }
-  }, [tableSearch, stockOutRecords]);
-
   const fetchItems = async () => {
     try {
       const response = await itemService.getAllItems();
@@ -60,11 +39,24 @@ const StockOutPage = () => {
     try {
       const response = await stockService.getAllStockOuts();
       setStockOutRecords(response?.data || []);
-      setFilteredRecords(response?.data || []);
     } catch (error) {
       console.error('Error fetching stock out records:', error);
     }
   };
+
+  // ===== FETCH DATA =====
+  useEffect(() => {
+    fetchItems();
+    fetchStockOutRecords();
+  }, []);
+
+  const filteredRecords = useMemo(() => {
+    if (!tableSearch) return stockOutRecords;
+    return stockOutRecords.filter(record =>
+      record.itemName?.toLowerCase().includes(tableSearch.toLowerCase()) ||
+      record.reason?.toLowerCase().includes(tableSearch.toLowerCase())
+    );
+  }, [tableSearch, stockOutRecords]);
 
   // ===== FORM HANDLERS =====
   const handleChange = (e) => {

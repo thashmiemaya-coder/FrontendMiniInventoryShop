@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Edit, Trash2, Search } from 'lucide-react';
 import { supplierService } from '../services/supplierService';
 import StatusBadge from '../components/common/StatusBadge';
@@ -8,7 +8,6 @@ import EmptyState from '../components/common/EmptyState';
 
 const SupplierPage = () => {
   const [suppliers, setSuppliers] = useState([]);
-  const [filteredSuppliers, setFilteredSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -23,19 +22,10 @@ const SupplierPage = () => {
     isActive: true,
   });
 
-  useEffect(() => {
-    fetchSuppliers();
-  }, []);
-
-  useEffect(() => {
-    filterSuppliers();
-  }, [searchTerm, suppliers]);
-
   const fetchSuppliers = async () => {
     try {
       const response = await supplierService.getAllSuppliers();
       setSuppliers(response?.data || []);
-      setFilteredSuppliers(response?.data || []);
     } catch (error) {
       console.error('Error fetching suppliers:', error);
     } finally {
@@ -43,18 +33,18 @@ const SupplierPage = () => {
     }
   };
 
-  const filterSuppliers = () => {
-    if (!searchTerm) {
-      setFilteredSuppliers(suppliers);
-      return;
-    }
-    const filtered = suppliers.filter((sup) =>
+  useEffect(() => {
+    fetchSuppliers();
+  }, []);
+
+  const filteredSuppliers = useMemo(() => {
+    if (!searchTerm) return suppliers;
+    return suppliers.filter((sup) =>
       sup.supplierName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       sup.contactNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       sup.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    setFilteredSuppliers(filtered);
-  };
+  }, [suppliers, searchTerm]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

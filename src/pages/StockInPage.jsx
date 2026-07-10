@@ -1,20 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, Trash2, EyeOff, CheckCircle } from 'lucide-react';
 import { stockService } from '../services/stockService';
 import { supplierService } from '../services/supplierService';
 import { itemService } from '../services/itemService';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const StockInPage = () => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [suppliers, setSuppliers] = useState([]);
   const [items, setItems] = useState([]);
   const [stockItems, setStockItems] = useState([]);
   const [stockInRecords, setStockInRecords] = useState([]);
-  const [filteredRecords, setFilteredRecords] = useState([]);
   const [tableSearch, setTableSearch] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [formData, setFormData] = useState({
@@ -30,26 +27,6 @@ const StockInPage = () => {
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
-
-  // ===== FETCH DATA ON LOAD =====
-  useEffect(() => {
-    fetchSuppliers();
-    fetchItems();
-    fetchStockInRecords();
-  }, []);
-
-  // ===== FILTER RECORDS FOR TABLE =====
-  useEffect(() => {
-    if (!tableSearch) {
-      setFilteredRecords(stockInRecords);
-    } else {
-      const filtered = stockInRecords.filter(record =>
-        record.itemName?.toLowerCase().includes(tableSearch.toLowerCase()) ||
-        record.supplierName?.toLowerCase().includes(tableSearch.toLowerCase())
-      );
-      setFilteredRecords(filtered);
-    }
-  }, [tableSearch, stockInRecords]);
 
   // ===== API CALLS =====
   const fetchSuppliers = async () => {
@@ -74,11 +51,26 @@ const StockInPage = () => {
     try {
       const response = await stockService.getAllStockIns();
       setStockInRecords(response?.data || []);
-      setFilteredRecords(response?.data || []);
     } catch (error) {
       console.error('Error fetching stock in records:', error);
     }
   };
+
+  // ===== FETCH DATA ON LOAD =====
+  useEffect(() => {
+    fetchSuppliers();
+    fetchItems();
+    fetchStockInRecords();
+  }, []);
+
+  // ===== FILTER RECORDS FOR TABLE =====
+  const filteredRecords = useMemo(() => {
+    if (!tableSearch) return stockInRecords;
+    return stockInRecords.filter(record =>
+      record.itemName?.toLowerCase().includes(tableSearch.toLowerCase()) ||
+      record.supplierName?.toLowerCase().includes(tableSearch.toLowerCase())
+    );
+  }, [tableSearch, stockInRecords]);
 
   // ===== FORM HANDLERS =====
   const handleChange = (e) => {

@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Edit, Trash2, Search } from 'lucide-react';
 import { categoryService } from '../services/categoryService';
-import { itemService } from '../services/itemService';
 import StatusBadge from '../components/common/StatusBadge';
 import ConfirmModal from '../components/common/ConfirmModal';
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -9,7 +8,6 @@ import EmptyState from '../components/common/EmptyState';
 
 const CategoryPage = () => {
   const [categories, setCategories] = useState([]);
-  const [filteredCategories, setFilteredCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -23,19 +21,10 @@ const CategoryPage = () => {
     isActive: true,
   });
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    filterCategories();
-  }, [searchTerm, categories]);
-
   const fetchCategories = async () => {
     try {
       const response = await categoryService.getAllCategories();
       setCategories(response?.data || []);
-      setFilteredCategories(response?.data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
     } finally {
@@ -43,17 +32,17 @@ const CategoryPage = () => {
     }
   };
 
-  const filterCategories = () => {
-    if (!searchTerm) {
-      setFilteredCategories(categories);
-      return;
-    }
-    const filtered = categories.filter((cat) =>
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const filteredCategories = useMemo(() => {
+    if (!searchTerm) return categories;
+    return categories.filter((cat) =>
       cat.categoryName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       cat.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    setFilteredCategories(filtered);
-  };
+  }, [categories, searchTerm]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
